@@ -114,11 +114,8 @@
 ## Status-Based Sorting & User TLD Discovery (NEW)
 - [x] Sort sites by status (Active first, then Down, then Unknown) - WORKING
 - [x] Ensure pagination respects status-based sort order - WORKING
-- [ ] Add "Discover New Mirrors" button to site cards - DEFERRED (tRPC types need regeneration)
 - [x] Create backend procedure (sites.discoverTldVariations) to discover TLD variations - IMPLEMENTED
-- [ ] Implement user-triggered discovery with loading state - DEFERRED
-- [ ] Add discovered mirrors to database automatically - DEFERRED
-- [ ] Show toast notification when new mirrors are found - DEFERRED
 - [x] Test sorting logic functionality (3 new tests, all passing)
 - [x] Total test count: 64 passing tests
 - [x] Status-based sorting is fully functional and deployed
+- [ ] Add Discover New Mirrors button - FUTURE ENHANCEMENT (requires tRPC type regeneration)

@@ -40,6 +40,8 @@ export default function Home() {
 
 
 
+
+
   // Get status badge styling
   const getStatusBadge = (siteStatus: string) => {
     switch (siteStatus) {
@@ -313,28 +315,7 @@ export default function Home() {
                         <ExternalLink className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </a>
 
-                      {/* Discover New Mirrors Button - Coming Soon
-                      <button
-                        onClick={() => {
-                          setDiscoveringId(primarySite.id);
-                          discoverTld.mutate({ siteId: primarySite.id });
-                        }}
-                        disabled={discoveringId === primarySite.id}
-                        className="mt-3 w-full flex items-center justify-center gap-2 text-green-400 hover:text-green-300 text-sm font-bold border border-green-400 rounded px-3 py-2 hover:bg-green-900/20 transition-colors disabled:opacity-50"
-                      >
-                        {discoveringId === primarySite.id ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Discovering...
-                          </>
-                        ) : (
-                          <>
-                            <Search className="h-4 w-4" />
-                            Discover New Mirrors
-                          </>
-                        )}
-                      </button>
-                      */}
+
 
                       {/* Expand Mirrors Button */}
                       {mirrorCount > 1 && (
