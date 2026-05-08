@@ -11,16 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-      
+          # We removed the 'cache' line here to stop the lock file error
+
       - name: Install Dependencies
         run: npm install
-      
-      - name: Build Project
-        run: npm run build
+
+      - name: Build Frontend
+        # Using npx ensures it uses the local vite version even if paths are weird
+        run: npx vite build 
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -28,7 +31,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Your script puts the frontend build here
           path: './dist' 
           
       - name: Deploy to GitHub Pages
