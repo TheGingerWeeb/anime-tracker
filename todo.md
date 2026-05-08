@@ -67,3 +67,15 @@
 - [x] All 46 tests passing (34 existing + 12 new discovery tests)
 - [x] Seed 50+ comprehensive anime sites (39 new sites added, 50 total)
 - [x] Verified pagination working with 50 sites across 5 pages
+
+
+## TLD Variations & Free-Only Filtering (NEW)
+- [x] Remove all paid subscription services (Netflix, Hulu, Prime Video, Crunchyroll, etc.)
+- [x] Keep only free browser-based streaming sites
+- [x] Create TLD variation discovery for common anime sites
+- [x] Seed database with 61 sites including multiple TLD variations (9anime.to/ru/me/id/sh, etc.)
+- [x] Update discovery engine to find TLD variations automatically
+- [x] Test pagination with 61 sites across 6 pages (12 per page)
+- [x] Verify all sites are free and browser-streamable
+- [x] Fixed getById tests to work with dynamic database state
+- [x] All 46 tests passing
