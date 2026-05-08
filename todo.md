@@ -65,3 +65,5 @@
 - [x] Update frontend grid to handle 100+ sites with pagination (12 per page)
 - [x] Write 12 comprehensive vitest tests for discovery engine
 - [x] All 46 tests passing (34 existing + 12 new discovery tests)
+- [x] Seed 50+ comprehensive anime sites (39 new sites added, 50 total)
+- [x] Verified pagination working with 50 sites across 5 pages
