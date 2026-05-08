@@ -25,4 +25,22 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Anime streaming sites table for tracking availability status.
+ */
+export const animeSites = mysqlTable("anime_sites", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  url: varchar("url", { length: 512 }).notNull().unique(),
+  description: text("description"),
+  genre: mysqlEnum("genre", ["legal", "unofficial"]).default("unofficial").notNull(),
+  contentType: mysqlEnum("contentType", ["subbed", "dubbed", "both"]).default("both").notNull(),
+  status: mysqlEnum("status", ["Active", "Down", "Unknown"]).default("Unknown").notNull(),
+  lastChecked: timestamp("lastChecked"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AnimeSite = typeof animeSites.$inferSelect;
+export type InsertAnimeSite = typeof animeSites.$inferInsert;
