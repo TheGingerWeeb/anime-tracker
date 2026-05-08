@@ -1,11 +1,10 @@
 import { eq, like, or } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { InsertUser, users, animeSites, InsertAnimeSite, AnimeSite } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -68,7 +67,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -85,11 +85,8 @@ export async function getUserByOpenId(openId: string) {
   }
 
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
   return result.length > 0 ? result[0] : undefined;
 }
-
-// ============ ANIME SITES QUERIES ============
 
 export async function getAllAnimeSites(): Promise<AnimeSite[]> {
   const db = await getDb();
@@ -170,8 +167,8 @@ export async function createAnimeSite(site: InsertAnimeSite): Promise<AnimeSite 
   }
 
   try {
-    const result = await db.insert(animeSites).values(site);
-    const id = result[0].insertId;
+    const result = await db.insert(animeSites).values(site).returning({ id: animeSites.id });
+    const id = result[0].id;
     return await getAnimeSiteById(Number(id)) || null;
   } catch (error) {
     console.error("[Database] Failed to create anime site:", error);
