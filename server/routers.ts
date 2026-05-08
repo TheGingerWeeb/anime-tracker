@@ -213,6 +213,66 @@ export const appRouter = router({
     }),
 
     /**
+     * Discover new TLD variations for a specific site (public)
+     */
+    discoverTldVariations: publicProcedure
+      .input(
+        z.object({
+          siteId: z.number(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const site = await getAnimeSiteById(input.siteId);
+        if (!site) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Site not found" });
+        }
+
+        // Import TLD discovery functions
+        const { extractBaseDomain, discoverTldVariations } = await import("./tldDiscovery");
+        
+        const baseDomain = extractBaseDomain(site.url);
+        if (!baseDomain) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Could not extract base domain" });
+        }
+
+        // Get existing URLs for this site group
+        const existingUrls = await searchAnimeSites(site.siteGroup || site.name);
+        const existingUrlList = existingUrls.map(s => s.url);
+
+        // Discover new TLD variations
+        const newUrls = await discoverTldVariations(baseDomain, existingUrlList);
+
+        // Add discovered URLs as new sites
+        const addedSites = [];
+        for (const url of newUrls) {
+          try {
+            const tldPart = new URL(url).hostname.split(".").slice(-2).join(".").toUpperCase();
+            const newSite = await createAnimeSite({
+              name: `${site.siteGroup || site.name} (${tldPart})`,
+              url,
+              description: site.description,
+              genre: site.genre,
+              contentType: site.contentType,
+              notes: `Auto-discovered TLD variation of ${site.name}`,
+              status: "Unknown",
+              siteGroup: site.siteGroup || site.name,
+            });
+            if (newSite) {
+              addedSites.push(newSite);
+            }
+          } catch (error) {
+            console.error(`Error adding TLD variation ${url}:`, error);
+          }
+        }
+
+        return {
+          discovered: newUrls.length,
+          added: addedSites.length,
+          sites: addedSites,
+        };
+      }),
+
+    /**
      * Add discovered sites from discovery engine
      */
     addDiscoveredSites: adminProcedure

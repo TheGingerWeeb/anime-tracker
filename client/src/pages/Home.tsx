@@ -5,9 +5,10 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, RefreshCw, ExternalLink, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { Loader2, RefreshCw, ExternalLink, ChevronLeft, ChevronRight, ChevronDown, Search } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { Link } from "wouter";
+import { toast } from "sonner";
 
 type Status = "All" | "Active" | "Down" | "Unknown";
 
@@ -36,6 +37,8 @@ export default function Home() {
       refetch();
     },
   });
+
+
 
   // Get status badge styling
   const getStatusBadge = (siteStatus: string) => {
@@ -71,6 +74,18 @@ export default function Home() {
     return groupSites[0];
   };
 
+  // Sort groups by primary site status (Active first)
+  const sortedGroupEntries = Object.entries(groupedSites).sort(([, groupA], [, groupB]) => {
+    const primaryA = getPrimarySite(groupA);
+    const primaryB = getPrimarySite(groupB);
+
+    const statusOrder = { Active: 0, Down: 1, Unknown: 2 };
+    const orderA = statusOrder[primaryA.status as keyof typeof statusOrder] ?? 3;
+    const orderB = statusOrder[primaryB.status as keyof typeof statusOrder] ?? 3;
+
+    return orderA - orderB;
+  });
+
   // Count sites by status
   const activeSites = sites.filter(s => s.status === "Active").length;
   const downSites = sites.filter(s => s.status === "Down").length;
@@ -99,11 +114,10 @@ export default function Home() {
   };
 
   // Get grouped sites for current page
-  const groupedSitesList = Object.entries(groupedSites);
-  const totalPages = Math.ceil(groupedSitesList.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(sortedGroupEntries.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, groupedSitesList.length);
-  const paginatedGroups = groupedSitesList.slice(startIndex, endIndex);
+  const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, sortedGroupEntries.length);
+  const paginatedGroups = sortedGroupEntries.slice(startIndex, endIndex);
 
   return (
     <div className="min-h-screen bg-gradient-cyber">
@@ -232,7 +246,7 @@ export default function Home() {
           <>
             {/* Pagination Info */}
             <div className="mb-6 text-center text-gray-400 text-sm">
-              Showing {startIndex + 1} - {endIndex} of {groupedSitesList.length} site groups ({sites.length} total mirrors)
+              Showing {startIndex + 1} - {endIndex} of {sortedGroupEntries.length} site groups ({sites.length} total mirrors) | Sorted by Status: Active First
             </div>
 
             {/* Sites Grid */}
@@ -298,6 +312,29 @@ export default function Home() {
                         Visit Site
                         <ExternalLink className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </a>
+
+                      {/* Discover New Mirrors Button - Coming Soon
+                      <button
+                        onClick={() => {
+                          setDiscoveringId(primarySite.id);
+                          discoverTld.mutate({ siteId: primarySite.id });
+                        }}
+                        disabled={discoveringId === primarySite.id}
+                        className="mt-3 w-full flex items-center justify-center gap-2 text-green-400 hover:text-green-300 text-sm font-bold border border-green-400 rounded px-3 py-2 hover:bg-green-900/20 transition-colors disabled:opacity-50"
+                      >
+                        {discoveringId === primarySite.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Discovering...
+                          </>
+                        ) : (
+                          <>
+                            <Search className="h-4 w-4" />
+                            Discover New Mirrors
+                          </>
+                        )}
+                      </button>
+                      */}
 
                       {/* Expand Mirrors Button */}
                       {mirrorCount > 1 && (
