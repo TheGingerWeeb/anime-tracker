@@ -15,6 +15,13 @@
       "when": 1778256705445,
       "tag": "0001_new_wallop",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1778259771307,
+      "tag": "0002_little_rumiko_fujikawa",
+      "breakpoints": true
     }
   ]
 }

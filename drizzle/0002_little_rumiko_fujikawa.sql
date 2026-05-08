@@ -1,0 +1,1 @@
+ALTER TABLE `anime_sites` ADD `siteGroup` varchar(255);

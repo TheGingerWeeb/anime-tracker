@@ -38,6 +38,7 @@ export const animeSites = mysqlTable("anime_sites", {
   status: mysqlEnum("status", ["Active", "Down", "Unknown"]).default("Unknown").notNull(),
   lastChecked: timestamp("lastChecked"),
   notes: text("notes"),
+  siteGroup: varchar("siteGroup", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

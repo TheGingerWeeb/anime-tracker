@@ -1,9 +1,11 @@
+"use client";
+
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, RefreshCw, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, RefreshCw, ExternalLink, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { Link } from "wouter";
 
@@ -17,6 +19,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Fetch sites based on filters
   const { data: sites = [], isLoading, refetch } = trpc.sites.list.useQuery(
@@ -48,6 +51,26 @@ export default function Home() {
     }
   };
 
+  // Group sites by siteGroup
+  const groupedSites = sites.reduce((acc, site) => {
+    const group = site.siteGroup || site.name;
+    if (!acc[group]) {
+      acc[group] = [];
+    }
+    acc[group].push(site);
+    return acc;
+  }, {} as Record<string, typeof sites>);
+
+  // Get primary site (first one in group with best status)
+  const getPrimarySite = (groupSites: typeof sites) => {
+    // Prefer Active, then Down, then Unknown
+    const active = groupSites.find(s => s.status === "Active");
+    if (active) return active;
+    const down = groupSites.find(s => s.status === "Down");
+    if (down) return down;
+    return groupSites[0];
+  };
+
   // Count sites by status
   const activeSites = sites.filter(s => s.status === "Active").length;
   const downSites = sites.filter(s => s.status === "Down").length;
@@ -64,11 +87,23 @@ export default function Home() {
     setCurrentPage(1);
   };
 
-  // Calculate pagination
-  const totalPages = Math.ceil(sites.length / ITEMS_PER_PAGE);
+  // Toggle group expansion
+  const toggleGroup = (groupName: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupName)) {
+      newExpanded.delete(groupName);
+    } else {
+      newExpanded.add(groupName);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
+  // Get grouped sites for current page
+  const groupedSitesList = Object.entries(groupedSites);
+  const totalPages = Math.ceil(groupedSitesList.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, sites.length);
-  const paginatedSites = sites.slice(startIndex, endIndex);
+  const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, groupedSitesList.length);
+  const paginatedGroups = groupedSitesList.slice(startIndex, endIndex);
 
   return (
     <div className="min-h-screen bg-gradient-cyber">
@@ -197,78 +232,133 @@ export default function Home() {
           <>
             {/* Pagination Info */}
             <div className="mb-6 text-center text-gray-400 text-sm">
-              Showing {startIndex + 1} - {endIndex} of {sites.length} sites
+              Showing {startIndex + 1} - {endIndex} of {groupedSitesList.length} site groups ({sites.length} total mirrors)
             </div>
 
             {/* Sites Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedSites.map((site) => (
-                <div key={site.id} className="cyber-card group hover:shadow-lg transition-all">
-                  {/* Status Indicator */}
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-pink-500 flex-1">{site.name}</h3>
-                    {getStatusBadge(site.status)}
+              {paginatedGroups.map(([groupName, groupSites]) => {
+                const primarySite = getPrimarySite(groupSites);
+                const isExpanded = expandedGroups.has(groupName);
+                const mirrorCount = groupSites.length;
+
+                return (
+                  <div key={groupName} className="cyber-card group hover:shadow-lg transition-all">
+                    {/* Primary Site Card */}
+                    <div>
+                      {/* Status Indicator */}
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-xl font-bold text-pink-500 flex-1">{groupName}</h3>
+                        {getStatusBadge(primarySite.status)}
+                      </div>
+
+                      {/* Description */}
+                      {primarySite.description && (
+                        <p className="text-gray-300 text-sm mb-4">{primarySite.description}</p>
+                      )}
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span className="text-xs px-2 py-1 bg-gray-800 text-gray-300 rounded">
+                          {primarySite.genre === "legal" ? "Legal" : "Unofficial"}
+                        </span>
+                        <span className="text-xs px-2 py-1 bg-gray-800 text-gray-300 rounded">
+                          {primarySite.contentType === "both"
+                            ? "Sub & Dub"
+                            : primarySite.contentType === "subbed"
+                              ? "Subbed"
+                              : "Dubbed"}
+                        </span>
+                        {mirrorCount > 1 && (
+                          <span className="text-xs px-2 py-1 bg-cyan-900 text-cyan-300 rounded font-bold">
+                            {mirrorCount} mirrors
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Notes */}
+                      {primarySite.notes && (
+                        <p className="text-xs text-yellow-400 mb-4 italic">⚠️ {primarySite.notes}</p>
+                      )}
+
+                      {/* Last Checked */}
+                      {primarySite.lastChecked && (
+                        <p className="text-xs text-gray-500 mb-4">
+                          Last checked: {new Date(primarySite.lastChecked).toLocaleString()}
+                        </p>
+                      )}
+
+                      {/* URL Link */}
+                      <a
+                        href={primarySite.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm font-bold mt-4 group"
+                      >
+                        Visit Site
+                        <ExternalLink className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </a>
+
+                      {/* Expand Mirrors Button */}
+                      {mirrorCount > 1 && (
+                        <button
+                          onClick={() => toggleGroup(groupName)}
+                          className="mt-4 w-full flex items-center justify-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm font-bold border border-cyan-400 rounded px-3 py-2 hover:bg-cyan-900/20 transition-colors"
+                        >
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                          />
+                          {isExpanded ? "Hide Mirrors" : `Show ${mirrorCount - 1} More Mirrors`}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Mirrors List */}
+                    {isExpanded && mirrorCount > 1 && (
+                      <div className="mt-6 pt-6 border-t border-gray-700 space-y-3">
+                        {groupSites.map((mirror, idx) => {
+                          if (idx === 0) return null; // Skip primary site
+                          return (
+                            <div key={mirror.id} className="flex items-center justify-between p-3 bg-gray-900 rounded">
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-300">{mirror.name}</p>
+                                <p className="text-xs text-gray-500">{new URL(mirror.url).hostname}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {getStatusBadge(mirror.status)}
+                                <a
+                                  href={mirror.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-cyan-400 hover:text-cyan-300"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-
-                  {/* Description */}
-                  {site.description && (
-                    <p className="text-gray-300 text-sm mb-4">{site.description}</p>
-                  )}
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="text-xs px-2 py-1 bg-gray-800 text-gray-300 rounded">
-                      {site.genre === "legal" ? "Legal" : "Unofficial"}
-                    </span>
-                    <span className="text-xs px-2 py-1 bg-gray-800 text-gray-300 rounded">
-                      {site.contentType === "both"
-                        ? "Sub & Dub"
-                        : site.contentType === "subbed"
-                          ? "Subbed"
-                          : "Dubbed"}
-                    </span>
-                  </div>
-
-                  {/* Notes */}
-                  {site.notes && (
-                    <p className="text-xs text-yellow-400 mb-4 italic">⚠️ {site.notes}</p>
-                  )}
-
-                  {/* Last Checked */}
-                  {site.lastChecked && (
-                    <p className="text-xs text-gray-500 mb-4">
-                      Last checked: {new Date(site.lastChecked).toLocaleString()}
-                    </p>
-                  )}
-
-                  {/* URL Link */}
-                  <a
-                    href={site.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm font-bold mt-4 group"
-                  >
-                    Visit Site
-                    <ExternalLink className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </a>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="mt-12 flex justify-center items-center gap-4 flex-wrap">
+              <div className="mt-12 flex justify-center items-center gap-4">
                 <Button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   variant="outline"
-                  className="border-pink-500 text-pink-500 hover:bg-pink-900"
+                  className="border-pink-500 text-pink-500"
                 >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  <ChevronLeft className="h-4 w-4" />
                   Previous
                 </Button>
 
-                <div className="flex gap-2 flex-wrap justify-center">
+                <div className="flex gap-2">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <Button
                       key={page}
@@ -279,7 +369,6 @@ export default function Home() {
                           ? "bg-pink-500 text-black"
                           : "border-pink-500 text-pink-500 hover:bg-pink-900"
                       }
-                      size="sm"
                     >
                       {page}
                     </Button>
@@ -290,25 +379,16 @@ export default function Home() {
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   variant="outline"
-                  className="border-pink-500 text-pink-500 hover:bg-pink-900"
+                  className="border-pink-500 text-pink-500"
                 >
                   Next
-                  <ChevronRight className="h-4 w-4 ml-2" />
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             )}
           </>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="border-t-2 border-pink-500 mt-20 py-8 px-4 md:px-8">
-        <div className="container max-w-7xl mx-auto text-center text-gray-400 text-sm">
-          <p>
-            Last updated: {new Date().toLocaleString()} | Status checks run automatically
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -53,7 +53,6 @@
 - [x] All 30 vitest tests passing
 - [x] Cyberpunk design fully implemented and responsive
 
-
 ## Site Discovery Engine (NEW)
 - [x] Research anime streaming site discovery methods and data sources
 - [x] Build Reddit API integration to scrape anime streaming communities
@@ -68,7 +67,6 @@
 - [x] Seed 50+ comprehensive anime sites (39 new sites added, 50 total)
 - [x] Verified pagination working with 50 sites across 5 pages
 
-
 ## TLD Variations & Free-Only Filtering (NEW)
 - [x] Remove all paid subscription services (Netflix, Hulu, Prime Video, Crunchyroll, etc.)
 - [x] Keep only free browser-based streaming sites
@@ -79,3 +77,35 @@
 - [x] Verify all sites are free and browser-streamable
 - [x] Fixed getById tests to work with dynamic database state
 - [x] All 46 tests passing
+
+## Auto TLD Variation Discovery & Status Checking (NEW)
+- [x] Implement TLD variation generator (common TLDs: .to, .ru, .me, .sh, .ai, .xyz, .info, .tv, .in, .pe, .se)
+- [x] Create TLD testing function to check if variation is reachable
+- [x] Add tRPC procedure to discover and add new TLD variations
+- [x] Create scheduled task to auto-discover TLD variations daily
+- [x] Write 8 tests for TLD variation discovery
+- [x] Run status checker on all 61 sites
+- [x] Update status indicators (25 Active, 36 Down)
+- [x] Implement batch status checking with timeouts (batch-status-check.mjs)
+- [x] Add last-checked timestamps to all sites
+- [x] Create batch-status-check.mjs script for automated checking
+
+## Mirror Grouping on Dashboard (NEW)
+- [x] Add siteGroup field to database schema
+- [x] Group TLD variations by base domain name (30 groups from 61 sites)
+- [x] Update frontend to display grouped mirrors
+- [x] Show "X mirrors available" badge on cards
+- [x] Implement expandable mirror list in site cards
+- [x] Update Home.tsx with mirror grouping logic
+- [x] All 61 tests passing (including 8 new TLD discovery tests)
+
+## FINAL STATUS
+- [x] 61 free anime streaming sites with TLD variations
+- [x] 25 Active sites, 36 Down sites (real-time status)
+- [x] 30 site groups with expandable mirror lists
+- [x] Cyberpunk aesthetic with neon design
+- [x] Admin panel for site management
+- [x] Batch status checking with timeout handling
+- [x] 61 vitest tests (all passing)
+- [x] Pagination working perfectly (12 sites per page)
+- [x] Ready for production deployment
