@@ -16,13 +16,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          # We removed the 'cache' line here to stop the lock file error
 
       - name: Install Dependencies
-        run: npm install
-
+        # Added --legacy-peer-deps to fix the ERESOLVE error
+        run: npm install --legacy-peer-deps
+        
       - name: Build Frontend
-        # Using npx ensures it uses the local vite version even if paths are weird
+        # We run the build from the root since your package.json is there
         run: npx vite build 
         
       - name: Setup Pages
