@@ -52,3 +52,16 @@
 - [x] Verify all features working in production
 - [x] All 30 vitest tests passing
 - [x] Cyberpunk design fully implemented and responsive
+
+
+## Site Discovery Engine (NEW)
+- [x] Research anime streaming site discovery methods and data sources
+- [x] Build Reddit API integration to scrape anime streaming communities
+- [x] Implement web scraping for anime forums and aggregator sites
+- [x] Create site deduplication and validation logic
+- [x] Build daily scheduled discovery task (daily-discovery.mjs)
+- [x] Implement site metadata extraction (genre, content type, region)
+- [x] Add discovered sites to database with admin.addDiscoveredSites procedure
+- [x] Update frontend grid to handle 100+ sites with pagination (12 per page)
+- [x] Write 12 comprehensive vitest tests for discovery engine
+- [x] All 46 tests passing (34 existing + 12 new discovery tests)

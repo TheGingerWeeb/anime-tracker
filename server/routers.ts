@@ -211,6 +211,64 @@ export const appRouter = router({
     getAllSites: adminProcedure.query(async () => {
       return await getAllAnimeSites();
     }),
+
+    /**
+     * Add discovered sites from discovery engine
+     */
+    addDiscoveredSites: adminProcedure
+      .input(
+        z.object({
+          sites: z.array(
+            z.object({
+              name: z.string(),
+              url: z.string(),
+              description: z.string().optional(),
+              genre: z.enum(["legal", "unofficial"]),
+              contentType: z.enum(["subbed", "dubbed", "both"]),
+              source: z.string(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const results = [];
+        let added = 0;
+        let skipped = 0;
+
+        for (const siteData of input.sites) {
+          try {
+            const existing = await searchAnimeSites(siteData.name);
+            if (existing.length > 0) {
+              skipped++;
+              continue;
+            }
+
+            const site = await createAnimeSite({
+              name: siteData.name,
+              url: siteData.url,
+              description: siteData.description || null,
+              genre: siteData.genre,
+              contentType: siteData.contentType,
+              notes: `Discovered from ${siteData.source}`,
+              status: "Unknown",
+            });
+
+            if (site) {
+              added++;
+              results.push(site);
+            }
+          } catch (error) {
+            console.error(`Error adding site ${siteData.name}:`, error);
+          }
+        }
+
+        return {
+          added,
+          skipped,
+          total: input.sites.length,
+          sites: results,
+        };
+      }),
   }),
 });
 
