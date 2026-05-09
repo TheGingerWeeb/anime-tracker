@@ -275,6 +275,15 @@ export const appRouter = router({
     /**
      * Add discovered sites from discovery engine
      */
+    runDiscovery: adminProcedure
+      .mutation(async () => {
+        const { runAllDiscovery } = await import("./siteDiscovery");
+        const discovered = await runAllDiscovery();
+        return {
+          count: discovered.length,
+          sites: discovered,
+        };
+      }),
     addDiscoveredSites: adminProcedure
       .input(
         z.object({

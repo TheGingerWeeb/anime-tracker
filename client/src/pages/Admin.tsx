@@ -89,6 +89,27 @@ export default function Admin() {
     },
   });
 
+  // Discover TLD variations mutation
+  const discoverTld = trpc.admin.discoverTldVariations.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Discovered ${data.added} new mirrors!`);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to discover TLD variations");
+    },
+  });
+
+  // Run site discovery mutation
+  const runDiscovery = trpc.admin.runDiscovery.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Discovered ${data.count} new sites!`);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to run discovery");
+    },
+  });
   // Check all status mutation
   const checkAllStatus = trpc.sites.checkAllStatus.useMutation({
     onSuccess: () => {
@@ -177,13 +198,30 @@ export default function Admin() {
                   </>
                 )}
               </Button>
+             <Button
+                onClick={() => runDiscovery.mutate()}
+                disabled={runDiscovery.isPending}
+                className="bg-pink-500 hover:bg-pink-600 text-black font-bold"
+              >
+                {runDiscovery.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Discovering...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Discover New Sites
+                  </>
+                )}
+              </Button>
               <Button
                 onClick={() => navigate("/")}
                 variant="outline"
                 className="border-pink-500 text-pink-500"
               >
                 Back to Tracker
-              </Button>
+              </Button> 
             </div>
           </div>
         </div>
@@ -269,7 +307,7 @@ export default function Admin() {
                         )}
                       </td>
                       <td className="py-4 px-4">
-                        <div className="flex gap-2">
+                      <div className="flex gap-2">
                           <Button
                             onClick={() => handleOpenDialog(site)}
                             size="sm"
@@ -279,6 +317,20 @@ export default function Admin() {
                             <Edit2 className="h-4 w-4" />
                           </Button>
                           <Button
+                            onClick={() => discoverTld.mutate({ siteId: site.id })}
+                            disabled={discoverTld.isPending}
+                            size="sm"
+                            variant="outline"
+                            className="border-pink-500 text-pink-500 hover:bg-pink-900"
+                            title="Discover TLD mirrors"
+                          >
+                            {discoverTld.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
                             onClick={() => setDeleteConfirmId(site.id)}
                             size="sm"
                             variant="outline"
@@ -286,7 +338,7 @@ export default function Admin() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                        </div>
+                        </div>  
                       </td>
                     </tr>
                   ))}

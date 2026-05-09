@@ -7,14 +7,22 @@ export function registerOAuthRoutes(app: Express) {
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     const { password } = req.body;
 
+    console.log("[Auth] Login attempt, password provided:", !!password);
+    console.log("[Auth] Expected password:", ENV.adminPassword ? "set" : "not set");
+
     if (!password || password !== ENV.adminPassword) {
       res.status(401).json({ error: "Invalid password" });
       return;
     }
 
     const token = createAdminToken();
-    const cookieOptions = getSessionCookieOptions(req);
-    res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      secure: true,
+      maxAge: ONE_YEAR_MS,
+    });
     res.json({ success: true });
   });
 

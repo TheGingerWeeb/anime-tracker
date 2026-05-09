@@ -1,7 +1,9 @@
-import mysql from 'mysql2/promise';
+import pg from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+const { Client } = pg;
 
 const sites = [
   {
@@ -87,24 +89,25 @@ const sites = [
 ];
 
 async function seedDatabase() {
-  const connection = await mysql.createConnection(process.env.DATABASE_URL);
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
 
   try {
     console.log('Starting database seeding...');
 
     for (const site of sites) {
       const query = `
-        INSERT INTO anime_sites (name, url, description, genre, contentType, status, notes, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, 'Unknown', ?, NOW(), NOW())
-        ON DUPLICATE KEY UPDATE
-          description = VALUES(description),
-          genre = VALUES(genre),
-          contentType = VALUES(contentType),
-          notes = VALUES(notes),
-          updatedAt = NOW()
+        INSERT INTO anime_sites (name, url, description, genre, "contentType", status, notes, "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, 'Unknown', $6, NOW(), NOW())
+        ON CONFLICT (url) DO UPDATE SET
+          description = EXCLUDED.description,
+          genre = EXCLUDED.genre,
+          "contentType" = EXCLUDED."contentType",
+          notes = EXCLUDED.notes,
+          "updatedAt" = NOW()
       `;
 
-      await connection.execute(query, [
+      await client.query(query, [
         site.name,
         site.url,
         site.description,
@@ -121,7 +124,7 @@ async function seedDatabase() {
     console.error('❌ Error seeding database:', error);
     process.exit(1);
   } finally {
-    await connection.end();
+    await client.end();
   }
 }
 
