@@ -207,12 +207,12 @@ export default function Home() {
                         Last checked: {new Date(primarySite.lastChecked).toLocaleString()}
                       </p>
                     )}
-                    
+                    <a
                       href={primarySite.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm font-bold mt-4 group"
-                  
+                    >
                       Visit Site
                       <ExternalLink className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </a>
@@ -238,7 +238,12 @@ export default function Home() {
                             </div>
                             <div className="flex items-center gap-2">
                               {getStatusBadge(mirror.status)}
-                              <a href={mirror.url} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300">
+                              <a
+                                href={mirror.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-cyan-400 hover:text-cyan-300"
+                              >
                                 <ExternalLink className="h-4 w-4" />
                               </a>
                             </div>
